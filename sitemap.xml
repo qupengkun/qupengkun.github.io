@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://66yr.cn/2020/01/01/SpringCloud01/</loc>
+    
+    <lastmod>2020-01-01T13:32:53.430Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://66yr.cn/2019/12/22/test2/</loc>
     
     <lastmod>2019-12-22T07:33:02.838Z</lastmod>
@@ -12,20 +19,6 @@
     <loc>http://66yr.cn/about/index.html</loc>
     
     <lastmod>2019-12-22T06:52:40.290Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://66yr.cn/2019/12/22/test/</loc>
-    
-    <lastmod>2019-12-22T06:46:40.421Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://66yr.cn/2019/12/22/hello-world/</loc>
-    
-    <lastmod>2019-12-22T06:19:11.994Z</lastmod>
     
   </url>
   
