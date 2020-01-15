@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>http://66yr.cn/2020/01/15/test/</loc>
+    <loc>http://66yr.cn/2020/01/01/SpringCloud01/</loc>
     <lastmod>2020-01-15</lastmod>
   </url>  <url>
-    <loc>http://66yr.cn/2020/01/01/SpringCloud01/</loc>
-    <lastmod>2020-01-01</lastmod>
+    <loc>http://66yr.cn/2020/01/15/test/</loc>
+    <lastmod>2020-01-15</lastmod>
   </url>
 </urlset>

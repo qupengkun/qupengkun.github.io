@@ -19,7 +19,7 @@
 <meta property="og:image" content="https://graph.baidu.com/resource/222ccfa7e76cd084c75c401577881827.png">
 <meta property="og:image" content="https://graph.baidu.com/resource/222c4077b0c48309929ba01577883608.png">
 <meta property="article:published_time" content="2020-01-01T13:30:19.000Z">
-<meta property="article:modified_time" content="2020-01-01T13:51:42.550Z">
+<meta property="article:modified_time" content="2020-01-15T03:13:17.652Z">
 <meta property="article:author" content="渠鹏坤">
 <meta property="article:tag" content="SpringCloud">
 <meta name="twitter:card" content="summary">
@@ -105,7 +105,7 @@
     <div class="article-entry" itemprop="articleBody">
       
         <h2 id="说在前面"><a href="#说在前面" class="headerlink" title="说在前面"></a>说在前面</h2><p>大概是三年前，因一些原因公司原项目最初为单体结构部署，所有业务模块都在一个项目里面，而后随着业务的不断膨胀以及模块之间的耦合，导致后面增加或修改一些简单业务时的成本都会变的极大。新入职的同事更是苦不堪言，学习代码的成本极高。基于这些原因，就开始了后面漫长的架构改造旅途。</p>
-<h2 id="这么多微服解决方案，到底选哪个？"><a href="#这么多微服解决方案，到底选哪个？" class="headerlink" title="这么多微服解决方案，到底选哪个？"></a>这么多微服解决方案，到底选哪个？</h2><h4 id="1-介绍"><a href="#1-介绍" class="headerlink" title="1.介绍"></a>1.介绍</h4><p><img src="https://graph.baidu.com/resource/22214b20280af9c6fc99601577877838.png" alt="file"></p>
+<h2 id="这么多微服解决方案，到底选哪个？"><a href="#这么多微服解决方案，到底选哪个？" class="headerlink" title="这么多微服解决方案，到底选哪个？"></a>这么多微服解决方案，到底选哪个？</h2><h4 id="1-介绍"><a href="#1-介绍" class="headerlink" title="1.介绍"></a>1.介绍</h4><p><img src="https://graph.baidu.com/resource/22214b20280af9c6fc99601577877838.png" alt="logo"></p>
 <ul>
 <li><p>Motan 微博内部使用的 RPC 框架，于 2016 年对外开源。后来在 Motan Agent 的基础上演化出了 WeiboMesh，这里暂时不展开说<a href="https://github.com/weibocom/motan" target="_blank" rel="noopener">Motan GitHub</a></p>
 </li>
@@ -116,12 +116,12 @@
 <li><p>Kubernetes 全新的基于容器技术的分布式架构方案。用于管理云平台中多个主机上的容器化的应用，Kubernetes的目标是让部署容器化的应用简单并且高效（powerful），Kubernetes提供了应用部署，规划，更新，维护的一种机制</p>
 </li>
 </ul>
-<h4 id="2-对比-话不多说，直接上图"><a href="#2-对比-话不多说，直接上图" class="headerlink" title="2.对比(话不多说，直接上图)"></a>2.对比(话不多说，直接上图)</h4><p><img src="https://graph.baidu.com/resource/222c17e8488861afb2fff01577880406.png" alt="file"></p>
+<h4 id="2-对比-话不多说，直接上图"><a href="#2-对比-话不多说，直接上图" class="headerlink" title="2.对比(话不多说，直接上图)"></a>2.对比(话不多说，直接上图)</h4><p><img src="https://graph.baidu.com/resource/222c17e8488861afb2fff01577880406.png" alt="对比"></p>
 <h4 id="3-选择"><a href="#3-选择" class="headerlink" title="3.选择"></a>3.选择</h4><p>很幸运的是，上图三种技术栈都有用过。算是各有优劣吧，具体还是要结合实际情况去选择，不过千万注意的是尽量别混搭（如SpringCloud+K8S或SpringCloud+Dubbo这样）</p>
 <p>后面具体会先围绕SpringCloud技术栈展开，而后也会记录下k8s和Dubbo相关的一些东西。这是第一篇，后面开始实战，以上！</p>
 <h2 id="结束"><a href="#结束" class="headerlink" title="结束"></a>结束</h2><ul>
-<li>关于环境<br><img src="https://graph.baidu.com/resource/222ccfa7e76cd084c75c401577881827.png" alt="file"></li>
-<li>架构图<br><img src="https://graph.baidu.com/resource/222c4077b0c48309929ba01577883608.png" alt="file"></li>
+<li>关于环境<br><img src="https://graph.baidu.com/resource/222ccfa7e76cd084c75c401577881827.png" alt="环境"></li>
+<li>架构图<br><img src="https://graph.baidu.com/resource/222c4077b0c48309929ba01577883608.png" alt="架构"></li>
 </ul>
 
       
