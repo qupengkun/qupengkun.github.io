@@ -2,11 +2,11 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>渠唐</title>
   
-  <subtitle>SimpleCoding</subtitle>
+  <subtitle>SIMPLE CODING</subtitle>
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://66yr.cn/"/>
-  <updated>2020-01-16T15:07:01.705Z</updated>
+  <updated>2020-01-15T03:13:17.652Z</updated>
   <id>http://66yr.cn/</id>
   
   <author>
@@ -15,42 +15,6 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
-  
-  <entry>
-    <title>test1</title>
-    <link href="http://66yr.cn/2020/01/16/test1/"/>
-    <id>http://66yr.cn/2020/01/16/test1/</id>
-    <published>2020-01-16T15:07:01.000Z</published>
-    <updated>2020-01-16T15:07:01.705Z</updated>
-    
-    <summary type="html">
-    
-    </summary>
-    
-    
-      <category term="随笔" scheme="http://66yr.cn/categories/%E9%9A%8F%E7%AC%94/"/>
-    
-    
-  </entry>
-  
-  <entry>
-    <title>test</title>
-    <link href="http://66yr.cn/2020/01/16/test/"/>
-    <id>http://66yr.cn/2020/01/16/test/</id>
-    <published>2020-01-16T14:13:39.000Z</published>
-    <updated>2020-01-16T14:14:42.008Z</updated>
-    
-    <summary type="html">
-    
-    </summary>
-    
-    
-      <category term="随笔" scheme="http://66yr.cn/categories/%E9%9A%8F%E7%AC%94/"/>
-    
-    
-      <category term="testTags" scheme="http://66yr.cn/tags/testTags/"/>
-    
-  </entry>
   
   <entry>
     <title>微服务实战——微服务架构选型SpringCloud / Dubbo / K8S比较（一）</title>
