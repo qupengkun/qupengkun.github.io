@@ -19,7 +19,7 @@
 <script id="hexo-configurations">
   var NexT = window.NexT || {};
   var CONFIG = {
-    hostname: new URL('http://66yr.cn').hostname,
+    hostname: new URL('http://www.66yr.cn').hostname,
     root: '/',
     scheme: 'Pisces',
     version: '7.7.0',
@@ -49,7 +49,7 @@
   <meta name="description" content="说在前面大概是三年前，因一些原因公司原项目最初为单体结构部署，所有业务模块都在一个项目里面，而后随着业务的不断膨胀以及模块之间的耦合，导致后面增加或修改一些简单业务时的成本都会变的极大。新入职的同事更是苦不堪言，学习代码的成本极高。基于这些原因，就开始了后面漫长的架构改造旅途。 这么多微服解决方案，到底选哪个？1.介绍  Motan 微博内部使用的 RPC 框架，于 2016 年对外开源。后来在">
 <meta property="og:type" content="article">
 <meta property="og:title" content="微服务实战——微服务架构选型SpringCloud &#x2F; Dubbo &#x2F; K8S比较（一）">
-<meta property="og:url" content="http://66yr.cn/2020/01/01/SpringCloud01/index.html">
+<meta property="og:url" content="http://www.66yr.cn/2020/01/01/SpringCloud01/index.html">
 <meta property="og:site_name" content="渠唐">
 <meta property="og:description" content="说在前面大概是三年前，因一些原因公司原项目最初为单体结构部署，所有业务模块都在一个项目里面，而后随着业务的不断膨胀以及模块之间的耦合，导致后面增加或修改一些简单业务时的成本都会变的极大。新入职的同事更是苦不堪言，学习代码的成本极高。基于这些原因，就开始了后面漫长的架构改造旅途。 这么多微服解决方案，到底选哪个？1.介绍  Motan 微博内部使用的 RPC 框架，于 2016 年对外开源。后来在">
 <meta property="og:locale" content="zh_CN">
@@ -64,7 +64,7 @@
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://graph.baidu.com/resource/22214b20280af9c6fc99601577877838.png">
 
-<link rel="canonical" href="http://66yr.cn/2020/01/01/SpringCloud01/">
+<link rel="canonical" href="http://www.66yr.cn/2020/01/01/SpringCloud01/">
 
 
 <script id="page-configurations">
@@ -201,10 +201,10 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://66yr.cn/2020/01/01/SpringCloud01/">
+    <link itemprop="mainEntityOfPage" href="http://www.66yr.cn/2020/01/01/SpringCloud01/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="image" content="http://image.blog.kxtop.cn/logo.jpeg">
       <meta itemprop="name" content="渠鹏坤">
       <meta itemprop="description" content="持续学习，记录点滴">
     </span>
@@ -302,6 +302,26 @@
     
     
     
+        <div class="reward-container">
+  <div>伸出你发财的小手～</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="http://image.blog.kxtop.cn/wehcatpay.jpeg" alt="渠鹏坤 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="http://image.blog.kxtop.cn/alipay.jpeg" alt="渠鹏坤 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
 
       <footer class="post-footer">
           <div class="post-tags">
@@ -377,6 +397,8 @@
 
       <div class="site-overview-wrap sidebar-panel">
         <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="渠鹏坤"
+      src="http://image.blog.kxtop.cn/logo.jpeg">
   <p class="site-author-name" itemprop="name">渠鹏坤</p>
   <div class="site-description" itemprop="description">持续学习，记录点滴</div>
 </div>
@@ -464,6 +486,15 @@
 
 
   
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
 
 
 
