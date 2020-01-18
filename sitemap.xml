@@ -2,6 +2,20 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://www.66yr.cn/2020/01/18/spring-cloud-02/</loc>
+    
+    <lastmod>2020-01-18T14:37:19.657Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://www.66yr.cn/2020/01/01/spring-cloud-01/</loc>
+    
+    <lastmod>2020-01-18T14:31:48.208Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://www.66yr.cn/about/index.html</loc>
     
     <lastmod>2020-01-16T14:20:52.632Z</lastmod>
@@ -19,13 +33,6 @@
     <loc>http://www.66yr.cn/categories/index.html</loc>
     
     <lastmod>2020-01-16T14:18:45.840Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://www.66yr.cn/2020/01/01/SpringCloud01/</loc>
-    
-    <lastmod>2020-01-15T03:13:17.652Z</lastmod>
     
   </url>
   
