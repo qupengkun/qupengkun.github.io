@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('http://www.66yr.cn').hostname,
+    root: '/',
+    scheme: 'Pisces',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="管理微服务配置对于单体应用架构来说，会使用配置文件管理我们的配置，这就是之前项目中的application.properties或application.yml。如果需要在多环境下使用，传统的做法是复制这些文件命名为application-xxx.properties，并且在启动时配置spring.profiles.active&#x3D;{profile}来指定环境。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="微服务实战——高可用的SpringCloudConfig">
+<meta property="og:url" content="http://www.66yr.cn/2020/03/31/spring-cloud-05/index.html">
+<meta property="og:site_name" content="渠唐">
+<meta property="og:description" content="管理微服务配置对于单体应用架构来说，会使用配置文件管理我们的配置，这就是之前项目中的application.properties或application.yml。如果需要在多环境下使用，传统的做法是复制这些文件命名为application-xxx.properties，并且在启动时配置spring.profiles.active&#x3D;{profile}来指定环境。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://image.blog.kxtop.cn/20200331155624.png">
+<meta property="og:image" content="http://image.blog.kxtop.cn/20200331173628.png">
+<meta property="og:image" content="http://image.blog.kxtop.cn/20200331163312.png">
+<meta property="og:image" content="http://image.blog.kxtop.cn/20200331171238.png">
+<meta property="og:image" content="http://image.blog.kxtop.cn/20200331171519.png">
+<meta property="article:published_time" content="2020-03-31T07:20:14.000Z">
+<meta property="article:modified_time" content="2020-03-31T10:08:18.352Z">
+<meta property="article:author" content="渠鹏坤">
+<meta property="article:tag" content="spring cloud">
+<meta property="article:tag" content="spring cloud config">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://image.blog.kxtop.cn/20200331155624.png">
+
+<link rel="canonical" href="http://www.66yr.cn/2020/03/31/spring-cloud-05/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>微服务实战——高可用的SpringCloudConfig | 渠唐</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?e0b4a7cf7d16f547f00dab6aad001f1e";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="渠唐" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">渠唐</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">SIMPLE CODING</p>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-首页">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-关于">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-标签">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-分类">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-归档">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.66yr.cn/2020/03/31/spring-cloud-05/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="http://image.blog.kxtop.cn/logo.jpeg">
+      <meta itemprop="name" content="渠鹏坤">
+      <meta itemprop="description" content="持续学习，记录点滴">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="渠唐">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          微服务实战——高可用的SpringCloudConfig
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2020-03-31 15:20:14 / 修改时间：18:08:18" itemprop="dateCreated datePublished" datetime="2020-03-31T15:20:14+08:00">2020-03-31</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" itemprop="url" rel="index">
+                    <span itemprop="name">微服务</span>
+                  </a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1/" itemprop="url" rel="index">
+                    <span itemprop="name">架构设计</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span id="/2020/03/31/spring-cloud-05/" class="post-meta-item leancloud_visitors" data-flag-title="微服务实战——高可用的SpringCloudConfig" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2020/03/31/spring-cloud-05/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2020/03/31/spring-cloud-05/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="管理微服务配置"><a href="#管理微服务配置" class="headerlink" title="管理微服务配置"></a>管理微服务配置</h3><p>对于单体应用架构来说，会使用配置文件管理我们的配置，这就是之前项目中的application.properties或application.yml。如果需要在多环境下使用，传统的做法是复制这些文件命名为application-xxx.properties，并且在启动时配置spring.profiles.active={profile}来指定环境。</p>
+<a id="more"></a>
+<p>在微服务架构下我们可能会有很多的微服务，所以要求的不只是在各自微服务中进行配置，我们需要将所有的配置放在统一平台上进行操作，不同的环境进行不同的配置，运行期间动态调整参数等等。总之一句话，使用集中管理配置是很有必要的。</p>
+<h3 id="Spring-Cloud-Config"><a href="#Spring-Cloud-Config" class="headerlink" title="Spring Cloud Config"></a>Spring Cloud Config</h3><ul>
+<li><a href="https://spring.io/projects/spring-cloud-config" target="_blank" rel="noopener">官方地址</a></li>
+<li>为分布式系统外部配置提供了服务器端和客户端的支持，它包括config server端和 config client端两部分</li>
+<li>Config server端是一个可以横向扩展、集中式的配置服务器，它用于集中管理应用程序各个环境下的配置，默认 使用Git存储配置内容</li>
+<li>Config client 是config server的客户端，用于操作存储在server中的配置属性</li>
+<li>优势<ul>
+<li>集中管理配置</li>
+<li>不同环境不同配置</li>
+<li>运行期间可以动态调整</li>
+<li>配置修改后可以自动更新<h3 id="本章源码"><a href="#本章源码" class="headerlink" title="本章源码"></a>本章源码</h3><a href="https://github.com/qupengkun/spring-cloud-demo.git" target="_blank" rel="noopener">源码</a><br><a href="66yr.cn">全部SpringCloud教程</a><h3 id="架构图"><a href="#架构图" class="headerlink" title="架构图"></a>架构图</h3><img src="http://image.blog.kxtop.cn/20200331155624.png" alt="spring cloud config架构图"></li>
+</ul>
+</li>
+</ul>
+<h3 id="引入spring-cloud-config步骤"><a href="#引入spring-cloud-config步骤" class="headerlink" title="引入spring cloud config步骤"></a>引入spring cloud config步骤</h3><p>基于之前SpringCloudDemo项目改造<br>一、在GitHub创建一个git仓库用来存放git配置</p>
+<ul>
+<li>创建仓库名字为spring-cloud-config-repo的私有仓库</li>
+<li>增加其他模块（后面config client会详细说，可先跳过）的配置文件，格式为<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">application&#125;-&#123;profile&#125;.properties</span><br></pre></td></tr></table></figure>
+并将配置项粘贴到新建的文件中，如：创建zuul-dev.properties，并将原来的zuul模块中的application.properties全部配置粘贴进来</li>
+<li>{application}-{profile}.properties，{application}表示微服务的名称，{label}表示Git对应的分支，默认为master，{profile}表示配置文件的profile<br>访问时就 /{application}/{profile}[/{label}]或/{label}/{application}-{profile}.properties</li>
+</ul>
+<p>二、 创建config server端</p>
+<ul>
+<li>创建maven项目，可在原项目中创建Module<br><img src="http://image.blog.kxtop.cn/20200331173628.png" alt="config server module"></li>
+<li>引入pom依赖<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.springframework.cloud<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>spring-cloud-config-server<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure></li>
+<li>创建启动类<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> cn.kxtop.blog.configserver;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> org.springframework.boot.SpringApplication;</span><br><span class="line"><span class="keyword">import</span> org.springframework.boot.autoconfigure.SpringBootApplication;</span><br><span class="line"><span class="keyword">import</span> org.springframework.cloud.client.discovery.EnableDiscoveryClient;</span><br><span class="line"><span class="keyword">import</span> org.springframework.cloud.config.server.EnableConfigServer;</span><br><span class="line"><span class="comment">// 注入到Eureka中，使高可用</span></span><br><span class="line"><span class="meta">@EnableDiscoveryClient</span> </span><br><span class="line"><span class="meta">@SpringBootApplication</span></span><br><span class="line"><span class="meta">@EnableConfigServer</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ConfigServerApplication</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        SpringApplication.run(ConfigServerApplication<span class="class">.<span class="keyword">class</span>)</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li>配置配置文件application.properties <figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">server.port</span>=<span class="string">9999</span></span><br><span class="line"><span class="comment"># 配置git仓库的地址(修改为你自己的git仓库地址)</span></span><br><span class="line"><span class="meta">spring.cloud.config.server.git.uri</span>=<span class="string">https://github.com/qupengkun/spring-cloud-config-repo.git</span></span><br><span class="line"><span class="comment"># git仓库账号</span></span><br><span class="line"><span class="meta">spring.cloud.config.server.git.username</span>=<span class="string">YOU_NAME</span></span><br><span class="line"><span class="comment"># git仓库秘密</span></span><br><span class="line"><span class="meta">spring.cloud.config.server.git.password</span>=<span class="string">YOU_PASSWORD</span></span><br><span class="line"><span class="comment">#eureka，确保Spring cloud config 高可用</span></span><br><span class="line"><span class="meta">eureka.client.serviceUrl.defaultZone</span> = <span class="string">http://localhost:8761/eureka/</span></span><br></pre></td></tr></table></figure></li>
+<li>启动项目并访问测试<br>http请求localhost:9999/zuul/dev<br><img src="http://image.blog.kxtop.cn/20200331163312.png" alt="config-server"></li>
+</ul>
+<p>三、创建config client端</p>
+<ul>
+<li>引入依赖<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.springframework.cloud<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>spring-cloud-config-client<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure></li>
+<li>创建bootstrap.properties<figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#对应之前git仓库的文件名，如zuul-dev.properties</span></span><br><span class="line"><span class="meta">spring.application.name</span>=<span class="string">zuul</span></span><br><span class="line"><span class="comment">#config server 地址</span></span><br><span class="line"><span class="meta">spring.cloud.config.uri</span>=<span class="string">http://localhost:9999</span></span><br><span class="line"><span class="comment">#&#123;profile&#125;名（环境）</span></span><br><span class="line"><span class="meta">spring.cloud.config.profile</span>=<span class="string">dev</span></span><br><span class="line"><span class="comment">#&#123;label&#125;名，git仓库分支</span></span><br><span class="line"><span class="meta">spring.cloud.config.label</span>=<span class="string">master</span></span><br></pre></td></tr></table></figure></li>
+<li>删除原来的application.properties，如没有，则不用操作直接下一步</li>
+<li>启动client端可见连接到了config-server端<br><img src="http://image.blog.kxtop.cn/20200331171238.png" alt="config client"></li>
+<li>查看eureka发现已经注册到eureka中<br><img src="http://image.blog.kxtop.cn/20200331171519.png" alt="基于spring cloud config的eureka"></li>
+<li>测试在线参数修改<br>可在Controller上加注解 @RefreshScope 请求server:port/refresh手动刷新</li>
+</ul>
+<h3 id="总结及后续"><a href="#总结及后续" class="headerlink" title="总结及后续"></a>总结及后续</h3><p>以上基本演示了Spring Cloud Config的用法，还是比较简单的，我们引入了Eureka使Config Server能保证高可用，还可以增加@RefreshScope手动刷新配置文件，如果配置对安全要求较高，也可以引入JCE（Java Cryptography Extension）进行加解密操作。<br>其实每次都去手动刷新配置还是比较麻烦且有很大的局限性的，那么如何修改配置后自动感知并刷新呢？请关注下一章基于Spring Cloud Bus实现自动刷新配置。</p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>伸出你发财的小手～</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="http://image.blog.kxtop.cn/wehcatpay.jpeg" alt="渠鹏坤 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="http://image.blog.kxtop.cn/alipay.jpeg" alt="渠鹏坤 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/spring-cloud/" rel="tag"># spring cloud</a>
+              <a href="/tags/spring-cloud-config/" rel="tag"># spring cloud config</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/03/03/spring-cloud-04/" rel="prev" title="微服务实战——SpringCloud与Feign集成">
+      <i class="fa fa-chevron-left"></i> 微服务实战——SpringCloud与Feign集成
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#管理微服务配置"><span class="nav-number">1.</span> <span class="nav-text">管理微服务配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Spring-Cloud-Config"><span class="nav-number">2.</span> <span class="nav-text">Spring Cloud Config</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#本章源码"><span class="nav-number">3.</span> <span class="nav-text">本章源码</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#架构图"><span class="nav-number">4.</span> <span class="nav-text">架构图</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#引入spring-cloud-config步骤"><span class="nav-number">5.</span> <span class="nav-text">引入spring cloud config步骤</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#总结及后续"><span class="nav-number">6.</span> <span class="nav-text">总结及后续</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="渠鹏坤"
+      src="http://image.blog.kxtop.cn/logo.jpeg">
+  <p class="site-author-name" itemprop="name">渠鹏坤</p>
+  <div class="site-description" itemprop="description">持续学习，记录点滴</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives">
+          <span class="site-state-item-count">5</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="/atom.xml" title="RSS → &#x2F;atom.xml"><i class="fa fa-fw fa-rss"></i>RSS</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">渠鹏坤</span>
+</div>
+  <div class="addthis_inline_share_toolbox">
+    <script src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5e215ea58d809a60" async="async"></script>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el: '#valine-comments',
+      verify: false,
+      notify: false,
+      appId: '6E7RAT8UKIHJxXmxImergBgx-gzGzoHsz',
+      appKey: 'YmShXgg4lKHr0RoB6bKOL9d0',
+      placeholder: "说点什么吧...",
+      avatar: 'mm',
+      meta: guest,
+      pageSize: '10' || 10,
+      visitor: true,
+      lang: 'zh-cn' || 'zh-cn',
+      path: location.pathname,
+      recordIP: true,
+      serverURLs: ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>
