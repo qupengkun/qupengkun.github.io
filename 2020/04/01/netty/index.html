@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('http://www.66yr.cn').hostname,
+    root: '/',
+    scheme: 'Pisces',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="Netty是Trustin Lee在2004年开发的一款高性能的网络应用程序框架。相比于JDK自带的NIO，Netty做了相当多的增强，且隔离了jdk nio的实现细节，API也比较友好，还支持流量整形等高级特性。在我们常见的一些开源项目中已经普遍的应用到了Netty，比如Dubbo、Elasticsearch、Zookeeperd等。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="搭建生产级的Netty项目">
+<meta property="og:url" content="http://www.66yr.cn/2020/04/01/netty/index.html">
+<meta property="og:site_name" content="渠唐">
+<meta property="og:description" content="Netty是Trustin Lee在2004年开发的一款高性能的网络应用程序框架。相比于JDK自带的NIO，Netty做了相当多的增强，且隔离了jdk nio的实现细节，API也比较友好，还支持流量整形等高级特性。在我们常见的一些开源项目中已经普遍的应用到了Netty，比如Dubbo、Elasticsearch、Zookeeperd等。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-04-01T10:03:11.000Z">
+<meta property="article:modified_time" content="2020-04-01T10:34:10.304Z">
+<meta property="article:author" content="渠鹏坤">
+<meta property="article:tag" content="netty">
+<meta property="article:tag" content="spring boot">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://www.66yr.cn/2020/04/01/netty/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>搭建生产级的Netty项目 | 渠唐</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?e0b4a7cf7d16f547f00dab6aad001f1e";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="渠唐" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">渠唐</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">SIMPLE CODING</p>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-首页">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-关于">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-标签">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-分类">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-归档">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.66yr.cn/2020/04/01/netty/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="http://image.blog.kxtop.cn/logo.jpeg">
+      <meta itemprop="name" content="渠鹏坤">
+      <meta itemprop="description" content="持续学习，记录点滴">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="渠唐">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          搭建生产级的Netty项目
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2020-04-01 18:03:11 / 修改时间：18:34:10" itemprop="dateCreated datePublished" datetime="2020-04-01T18:03:11+08:00">2020-04-01</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E9%AB%98%E5%8F%AF%E7%94%A8/" itemprop="url" rel="index">
+                    <span itemprop="name">高可用</span>
+                  </a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E9%AB%98%E5%8F%AF%E7%94%A8/%E7%BD%91%E7%BB%9C/" itemprop="url" rel="index">
+                    <span itemprop="name">网络</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span id="/2020/04/01/netty/" class="post-meta-item leancloud_visitors" data-flag-title="搭建生产级的Netty项目" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2020/04/01/netty/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2020/04/01/netty/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>Netty是Trustin Lee在2004年开发的一款高性能的网络应用程序框架。相比于JDK自带的NIO，Netty做了相当多的增强，且隔离了jdk nio的实现细节，API也比较友好，还支持流量整形等高级特性。在我们常见的一些开源项目中已经普遍的应用到了Netty，比如Dubbo、Elasticsearch、Zookeeperd等。</p>
+<a id="more"></a>
+
+<h4 id="Netty的具体开发"><a href="#Netty的具体开发" class="headerlink" title="Netty的具体开发"></a>Netty的具体开发</h4><p>提示：因代码相对较多，这里只展示其主要部分，至于项目中用到的编解码器、工具类，请直接拉到最后下载源码！也欢迎顺手给个Star～</p>
+<h5 id="需要的依赖"><a href="#需要的依赖" class="headerlink" title="需要的依赖"></a>需要的依赖</h5><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>com.google.code.gson<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>gson<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.projectlombok<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>lombok<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>io.dropwizard.metrics<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>metrics-core<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>4.1.1<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>io.dropwizard.metrics<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>metrics-jmx<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>4.1.1<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.apache.commons<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>commons-lang3<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>io.netty<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>netty-all<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>4.1.29.Final<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<h5 id="Client端代码"><a href="#Client端代码" class="headerlink" title="Client端代码"></a>Client端代码</h5><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.example.nettydemo.client;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> com.example.nettydemo.client.codec.*;</span><br><span class="line"><span class="keyword">import</span> com.example.nettydemo.client.codec.dispatcher.OperationResultFuture;</span><br><span class="line"><span class="keyword">import</span> com.example.nettydemo.client.codec.dispatcher.RequestPendingCenter;</span><br><span class="line"><span class="keyword">import</span> com.example.nettydemo.client.codec.dispatcher.ResponseDispatcherHandler;</span><br><span class="line"><span class="keyword">import</span> com.example.nettydemo.common.RequestMessage;</span><br><span class="line"><span class="keyword">import</span> com.example.nettydemo.common.string.StringOperation;</span><br><span class="line"><span class="keyword">import</span> com.example.nettydemo.util.IdUtil;</span><br><span class="line"><span class="keyword">import</span> io.netty.bootstrap.Bootstrap;</span><br><span class="line"><span class="keyword">import</span> io.netty.channel.ChannelFuture;</span><br><span class="line"><span class="keyword">import</span> io.netty.channel.ChannelInitializer;</span><br><span class="line"><span class="keyword">import</span> io.netty.channel.ChannelPipeline;</span><br><span class="line"><span class="keyword">import</span> io.netty.channel.nio.NioEventLoopGroup;</span><br><span class="line"><span class="keyword">import</span> io.netty.channel.socket.nio.NioChannelOption;</span><br><span class="line"><span class="keyword">import</span> io.netty.channel.socket.nio.NioSocketChannel;</span><br><span class="line"><span class="keyword">import</span> io.netty.handler.logging.LogLevel;</span><br><span class="line"><span class="keyword">import</span> io.netty.handler.logging.LoggingHandler;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> javax.net.ssl.SSLException;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.ExecutionException;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Client</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> InterruptedException, ExecutionException, SSLException </span>&#123;</span><br><span class="line"></span><br><span class="line">        Bootstrap bootstrap = <span class="keyword">new</span> Bootstrap();</span><br><span class="line">        bootstrap.channel(NioSocketChannel<span class="class">.<span class="keyword">class</span>)</span>;</span><br><span class="line"></span><br><span class="line">        <span class="comment">//客户端连接服务器最大允许时间，默认为30s</span></span><br><span class="line">        bootstrap.option(NioChannelOption.CONNECT_TIMEOUT_MILLIS, <span class="number">30</span> * <span class="number">1000</span>); <span class="comment">//10s</span></span><br><span class="line"></span><br><span class="line">        NioEventLoopGroup group = <span class="keyword">new</span> NioEventLoopGroup();</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line"></span><br><span class="line">            bootstrap.group(group);</span><br><span class="line"></span><br><span class="line">            RequestPendingCenter requestPendingCenter = <span class="keyword">new</span> RequestPendingCenter();</span><br><span class="line">            LoggingHandler loggingHandler = <span class="keyword">new</span> LoggingHandler(LogLevel.INFO);</span><br><span class="line"></span><br><span class="line">            bootstrap.handler(<span class="keyword">new</span> ChannelInitializer&lt;NioSocketChannel&gt;() &#123;</span><br><span class="line">                <span class="meta">@Override</span></span><br><span class="line">                <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">initChannel</span><span class="params">(NioSocketChannel ch)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">                    ChannelPipeline pipeline = ch.pipeline();</span><br><span class="line"></span><br><span class="line">                    pipeline.addLast(<span class="keyword">new</span> FrameDecoder());</span><br><span class="line">                    pipeline.addLast(<span class="keyword">new</span> FrameEncoder());</span><br><span class="line"></span><br><span class="line">                    pipeline.addLast(<span class="keyword">new</span> ProtocolEncoder());</span><br><span class="line">                    pipeline.addLast(<span class="keyword">new</span> ProtocolDecoder());</span><br><span class="line"></span><br><span class="line">                    pipeline.addLast(<span class="keyword">new</span> ResponseDispatcherHandler(requestPendingCenter));</span><br><span class="line">                    pipeline.addLast(<span class="keyword">new</span> OperationToRequestMessageEncoder());</span><br><span class="line"></span><br><span class="line"><span class="comment">//                    pipeline.addLast(loggingHandler);</span></span><br><span class="line"></span><br><span class="line">                &#125;</span><br><span class="line">            &#125;);</span><br><span class="line"></span><br><span class="line">            <span class="comment">//连接服务</span></span><br><span class="line">            ChannelFuture channelFuture = bootstrap.connect(<span class="string">"127.0.0.1"</span>, <span class="number">8888</span>);</span><br><span class="line">            <span class="comment">//因为future是异步执行，所以需要先连接上后，再进行下一步操作</span></span><br><span class="line">            channelFuture.sync();</span><br><span class="line"></span><br><span class="line">            <span class="keyword">long</span> streamId = IdUtil.nextId();</span><br><span class="line">            <span class="comment">/**</span></span><br><span class="line"><span class="comment">             * 发送数据测试，按照定义的规则组装数据</span></span><br><span class="line"><span class="comment">             */</span></span><br><span class="line"><span class="comment">//            OrderOperation orderOperation =  new OrderOperation(1001, "你好啊，hi");</span></span><br><span class="line">            RequestMessage requestMessage = <span class="keyword">new</span> RequestMessage(streamId, <span class="keyword">new</span> StringOperation(<span class="number">1234</span>, <span class="string">"你好啊，hi"</span>));</span><br><span class="line"></span><br><span class="line">            <span class="comment">//将future放入center</span></span><br><span class="line">            OperationResultFuture operationResultFuture = <span class="keyword">new</span> OperationResultFuture();</span><br><span class="line">            requestPendingCenter.add(streamId, operationResultFuture);</span><br><span class="line"></span><br><span class="line">            <span class="comment">//发送消息</span></span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">10</span>; i++) &#123;</span><br><span class="line">                channelFuture.channel().writeAndFlush(requestMessage);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="comment">//阻塞等待结果,结果来了之后会调用ResponseDispatcherHandler去set结果</span></span><br><span class="line"><span class="comment">//            OperationResult operationResult = operationResultFuture.get();</span></span><br><span class="line"><span class="comment">//            //将结果打印</span></span><br><span class="line"><span class="comment">//            System.out.println("返回:"+operationResult);</span></span><br><span class="line"></span><br><span class="line">            channelFuture.channel().closeFuture().get();</span><br><span class="line"></span><br><span class="line">        &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">            group.shutdownGracefully();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h5 id="Server端代码"><a href="#Server端代码" class="headerlink" title="Server端代码"></a>Server端代码</h5><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.example.nettydemo.server;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> com.example.nettydemo.server.codec.FrameDecoder;</span><br><span class="line"><span class="keyword">import</span> com.example.nettydemo.server.codec.FrameEncoder;</span><br><span class="line"><span class="keyword">import</span> com.example.nettydemo.server.codec.ProtocolDecoder;</span><br><span class="line"><span class="keyword">import</span> com.example.nettydemo.server.codec.ProtocolEncoder;</span><br><span class="line"><span class="keyword">import</span> com.example.nettydemo.server.handler.MetricsHandler;</span><br><span class="line"><span class="keyword">import</span> com.example.nettydemo.server.handler.ServerIdleCheckHandler;</span><br><span class="line"><span class="keyword">import</span> com.example.nettydemo.server.handler.ServerProcessHandler;</span><br><span class="line"><span class="keyword">import</span> io.netty.bootstrap.ServerBootstrap;</span><br><span class="line"><span class="keyword">import</span> io.netty.channel.ChannelFuture;</span><br><span class="line"><span class="keyword">import</span> io.netty.channel.ChannelInitializer;</span><br><span class="line"><span class="keyword">import</span> io.netty.channel.ChannelPipeline;</span><br><span class="line"><span class="keyword">import</span> io.netty.channel.nio.NioEventLoopGroup;</span><br><span class="line"><span class="keyword">import</span> io.netty.channel.socket.nio.NioChannelOption;</span><br><span class="line"><span class="keyword">import</span> io.netty.channel.socket.nio.NioServerSocketChannel;</span><br><span class="line"><span class="keyword">import</span> io.netty.channel.socket.nio.NioSocketChannel;</span><br><span class="line"><span class="keyword">import</span> io.netty.handler.flush.FlushConsolidationHandler;</span><br><span class="line"><span class="keyword">import</span> io.netty.handler.logging.LogLevel;</span><br><span class="line"><span class="keyword">import</span> io.netty.handler.logging.LoggingHandler;</span><br><span class="line"><span class="keyword">import</span> io.netty.handler.traffic.GlobalTrafficShapingHandler;</span><br><span class="line"><span class="keyword">import</span> io.netty.util.concurrent.DefaultThreadFactory;</span><br><span class="line"><span class="keyword">import</span> io.netty.util.concurrent.UnorderedThreadPoolEventExecutor;</span><br><span class="line"><span class="keyword">import</span> lombok.extern.slf4j.Slf4j;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> javax.net.ssl.SSLException;</span><br><span class="line"><span class="keyword">import</span> java.security.cert.CertificateException;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.ExecutionException;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * netty server 入口</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@Slf</span>4j</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Server</span> </span>&#123;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String... args)</span> <span class="keyword">throws</span> InterruptedException, ExecutionException, CertificateException, SSLException </span>&#123;</span><br><span class="line"></span><br><span class="line">        ServerBootstrap serverBootstrap = <span class="keyword">new</span> ServerBootstrap();</span><br><span class="line">        <span class="comment">//设置channel模式，因为是server所以使用NioServerSocketChannel</span></span><br><span class="line">        serverBootstrap.channel(NioServerSocketChannel<span class="class">.<span class="keyword">class</span>)</span>;</span><br><span class="line"></span><br><span class="line">        <span class="comment">//最大的等待连接数量</span></span><br><span class="line">        serverBootstrap.option(NioChannelOption.SO_BACKLOG, <span class="number">1024</span>);</span><br><span class="line">        <span class="comment">//设置是否启用 Nagle 算法:用将小的碎片数据连接成更大的报文 来提高发送效率。</span></span><br><span class="line">        <span class="comment">//如果需要发送一些较小的报文，则需要禁用该算法</span></span><br><span class="line">        serverBootstrap.childOption(NioChannelOption.TCP_NODELAY, <span class="keyword">true</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">//设置netty自带的log，并设置级别</span></span><br><span class="line">        serverBootstrap.handler(<span class="keyword">new</span> LoggingHandler(LogLevel.INFO));</span><br><span class="line"></span><br><span class="line">        <span class="comment">//thread</span></span><br><span class="line">        <span class="comment">//用户指定线程名</span></span><br><span class="line">        NioEventLoopGroup bossGroup = <span class="keyword">new</span> NioEventLoopGroup(<span class="number">0</span>, <span class="keyword">new</span> DefaultThreadFactory(<span class="string">"boss"</span>));</span><br><span class="line">        NioEventLoopGroup workGroup = <span class="keyword">new</span> NioEventLoopGroup(<span class="number">0</span>, <span class="keyword">new</span> DefaultThreadFactory(<span class="string">"worker"</span>));</span><br><span class="line">        UnorderedThreadPoolEventExecutor businessGroup = <span class="keyword">new</span> UnorderedThreadPoolEventExecutor(<span class="number">10</span>, <span class="keyword">new</span> DefaultThreadFactory(<span class="string">"business"</span>));</span><br><span class="line"></span><br><span class="line">        <span class="comment">//只能使用一个线程，因GlobalTrafficShapingHandler比较轻量级</span></span><br><span class="line">        NioEventLoopGroup eventLoopGroupForTrafficShaping = <span class="keyword">new</span> NioEventLoopGroup(<span class="number">0</span>, <span class="keyword">new</span> DefaultThreadFactory(<span class="string">"TS"</span>));</span><br><span class="line"></span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="comment">//设置react方式</span></span><br><span class="line">            serverBootstrap.group(bossGroup, workGroup);</span><br><span class="line"></span><br><span class="line">            <span class="comment">//metrics</span></span><br><span class="line">            MetricsHandler metricsHandler = <span class="keyword">new</span> MetricsHandler();</span><br><span class="line"></span><br><span class="line">            <span class="comment">//trafficShaping流量整形</span></span><br><span class="line">            <span class="comment">//long writeLimit 写入时控制, long readLimit 读取时控制 具体设置看业务修改</span></span><br><span class="line">            GlobalTrafficShapingHandler globalTrafficShapingHandler = <span class="keyword">new</span> GlobalTrafficShapingHandler(eventLoopGroupForTrafficShaping, <span class="number">10</span> * <span class="number">1024</span> * <span class="number">1024</span>, <span class="number">10</span> * <span class="number">1024</span> * <span class="number">1024</span>);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">            <span class="comment">//log</span></span><br><span class="line">            LoggingHandler debugLogHandler = <span class="keyword">new</span> LoggingHandler(LogLevel.DEBUG);</span><br><span class="line">            LoggingHandler infoLogHandler = <span class="keyword">new</span> LoggingHandler(LogLevel.INFO);</span><br><span class="line"></span><br><span class="line">            <span class="comment">//设置childHandler，按执行顺序放</span></span><br><span class="line">            serverBootstrap.childHandler(<span class="keyword">new</span> ChannelInitializer&lt;NioSocketChannel&gt;() &#123;</span><br><span class="line">                <span class="meta">@Override</span></span><br><span class="line">                <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">initChannel</span><span class="params">(NioSocketChannel ch)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line"></span><br><span class="line">                    ChannelPipeline pipeline = ch.pipeline();</span><br><span class="line"></span><br><span class="line">                    pipeline.addLast(<span class="string">"debugLog"</span>, debugLogHandler);</span><br><span class="line">                    pipeline.addLast(<span class="string">"tsHandler"</span>, globalTrafficShapingHandler);</span><br><span class="line">                    pipeline.addLast(<span class="string">"metricHandler"</span>, metricsHandler);</span><br><span class="line">                    pipeline.addLast(<span class="string">"idleHandler"</span>, <span class="keyword">new</span> ServerIdleCheckHandler());</span><br><span class="line"></span><br><span class="line">                    pipeline.addLast(<span class="string">"frameDecoder"</span>, <span class="keyword">new</span> FrameDecoder());</span><br><span class="line">                    pipeline.addLast(<span class="string">"frameEncoder"</span>, <span class="keyword">new</span> FrameEncoder());</span><br><span class="line">                    pipeline.addLast(<span class="string">"protocolDecoder"</span>, <span class="keyword">new</span> ProtocolDecoder());</span><br><span class="line">                    pipeline.addLast(<span class="string">"protocolEncoder"</span>, <span class="keyword">new</span> ProtocolEncoder());</span><br><span class="line"></span><br><span class="line">                    pipeline.addLast(<span class="string">"infoLog"</span>, infoLogHandler);</span><br><span class="line">                    <span class="comment">//对flush增强，减少flush次数牺牲延迟增强吞吐量</span></span><br><span class="line">                    pipeline.addLast(<span class="string">"flushEnhance"</span>, <span class="keyword">new</span> FlushConsolidationHandler(<span class="number">10</span>, <span class="keyword">true</span>));</span><br><span class="line">                    <span class="comment">//为业务处理指定单独的线程池</span></span><br><span class="line">                    pipeline.addLast(businessGroup, <span class="keyword">new</span> ServerProcessHandler());<span class="comment">//businessGroup,</span></span><br><span class="line">                &#125;</span><br><span class="line">            &#125;);</span><br><span class="line"></span><br><span class="line">            <span class="comment">//绑定端口并阻塞启动</span></span><br><span class="line">            ChannelFuture channelFuture = serverBootstrap.bind(<span class="number">8888</span>).sync();</span><br><span class="line"></span><br><span class="line">            channelFuture.channel().closeFuture().sync();</span><br><span class="line"></span><br><span class="line">        &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">            bossGroup.shutdownGracefully();</span><br><span class="line">            workGroup.shutdownGracefully();</span><br><span class="line">            businessGroup.shutdownGracefully();</span><br><span class="line">            eventLoopGroupForTrafficShaping.shutdownGracefully();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<h4 id="最后"><a href="#最后" class="headerlink" title="最后"></a>最后</h4><p>以上介绍了Netty的基本用法，在代码中也做了一部分的关键注释，但可能还会有许多不足，也不可能满足所有人的要求，大家可根据自己的实际需求去改造此项目。附上源码地址<a href="https://github.com/qupengkun/spring-cloud-demo.git" target="_blank" rel="noopener">netty源码</a></p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>伸出你发财的小手～</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="http://image.blog.kxtop.cn/wehcatpay.jpeg" alt="渠鹏坤 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="http://image.blog.kxtop.cn/alipay.jpeg" alt="渠鹏坤 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/netty/" rel="tag"># netty</a>
+              <a href="/tags/spring-boot/" rel="tag"># spring boot</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/03/31/spring-cloud-05/" rel="prev" title="微服务实战——高可用的SpringCloudConfig">
+      <i class="fa fa-chevron-left"></i> 微服务实战——高可用的SpringCloudConfig
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#Netty的具体开发"><span class="nav-number">1.</span> <span class="nav-text">Netty的具体开发</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#需要的依赖"><span class="nav-number">1.1.</span> <span class="nav-text">需要的依赖</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Client端代码"><span class="nav-number">1.2.</span> <span class="nav-text">Client端代码</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Server端代码"><span class="nav-number">1.3.</span> <span class="nav-text">Server端代码</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#最后"><span class="nav-number">2.</span> <span class="nav-text">最后</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="渠鹏坤"
+      src="http://image.blog.kxtop.cn/logo.jpeg">
+  <p class="site-author-name" itemprop="name">渠鹏坤</p>
+  <div class="site-description" itemprop="description">持续学习，记录点滴</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives">
+          <span class="site-state-item-count">6</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="/atom.xml" title="RSS → &#x2F;atom.xml"><i class="fa fa-fw fa-rss"></i>RSS</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">渠鹏坤</span>
+</div>
+  <div class="addthis_inline_share_toolbox">
+    <script src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5e215ea58d809a60" async="async"></script>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el: '#valine-comments',
+      verify: false,
+      notify: false,
+      appId: '6E7RAT8UKIHJxXmxImergBgx-gzGzoHsz',
+      appKey: 'YmShXgg4lKHr0RoB6bKOL9d0',
+      placeholder: "说点什么吧...",
+      avatar: 'mm',
+      meta: guest,
+      pageSize: '10' || 10,
+      visitor: true,
+      lang: 'zh-cn' || 'zh-cn',
+      path: location.pathname,
+      recordIP: true,
+      serverURLs: ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>
